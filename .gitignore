@@ -1,7 +1,8 @@
 *.class
 *.log
 
-metastore_db/
 target/
 
+metastore_db/
+derby.log
 
