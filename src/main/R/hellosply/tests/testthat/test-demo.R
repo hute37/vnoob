@@ -4,7 +4,14 @@ library(sparklyr)
 library(dplyr)
 
 
-sc <- spark_connect(master = "local")
+setup({
+  sc <<- spark_connect(master = "local")
+})
+
+teardown({
+  spark_disconnect(sc)
+})
+
 
 
 test_that("SQL access", {
@@ -13,13 +20,13 @@ test_that("SQL access", {
 
   library(DBI)
 
-  iris_tbl <- copy_to(sc, iris)
+  iris_tbl <- copy_to(sc, iris, name="iris_test")
 
-  iris_preview <- dbGetQuery(sc, "SELECT * FROM iris LIMIT 10")
+  iris_preview <- dbGetQuery(sc, "SELECT * FROM iris_test LIMIT 10")
   iris_preview
 
-  iris_count <- dbGetQuery(sc, "SELECT Species, count(*) as Species_Count FROM iris group by Species")
-  iris_count
+  iris_counter <- dbGetQuery(sc, "SELECT Species, count(*) as Species_Count FROM iris_test group by Species")
+  iris_counter
 
   expect_true(TRUE)
 })
@@ -76,4 +83,11 @@ test_that("can use dplyr window functions over 'Lahman::Batting' dataset", {
 })
 
 
+
+test_that("sply exported function", {
+
+  result <- hellosply::iris_count(sc)
+
+  expect_true(TRUE)
+})
 
