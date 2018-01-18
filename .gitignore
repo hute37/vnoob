@@ -6,3 +6,6 @@ target/
 metastore_db/
 derby.log
 
+.idea
+
+.Rproj.user
