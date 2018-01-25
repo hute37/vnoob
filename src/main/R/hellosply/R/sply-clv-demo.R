@@ -1,7 +1,6 @@
-#' count IRIS rows
+#' load BTYD sample dataset
 #'
-#' This function read iris dataset pushd by sparklyr::copy_to
-#' via SQL DBI interface to spark sql.
+#' This function load sample data and distribute to spark.
 #'
 #' Note: spark connection is allocated in function, with no cleanup
 #'
@@ -10,8 +9,9 @@
 #' @import dplyr
 #' @import sparklyr
 #' @import DBI
+#' @import BTYD
 #' @export
-iris_count <- function(sc){
+clv_data_load <- function(sc){
 
   iris_tbl <- copy_to(sc, datasets::iris, name="iris")
 
@@ -21,19 +21,18 @@ iris_count <- function(sc){
 }
 
 
-#' count IRIS rows (auto connection)
+#' run BTYD demo (auto connection)
 #'
-#' This function read iris dataset pushd by sparklyr::copy_to
-#' via SQL DBI interface to spark sql.
+#' spark apply evaluatio funcion after local param extimation.
 #'
 #' Note: spark connection is allocated in function, with no cleanup
 #'
 #' @return A count of iris dataset rows by species
 #' @export
-iris_count_auto <- function(){
+clv_demo_run <- function(){
 
   sc <- open_connection()
-  result <- iris_count(sc)
+  result <- clv_data_load(sc)
   close_connection(sc)
 
   result
