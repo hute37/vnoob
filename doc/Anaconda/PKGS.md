@@ -20,6 +20,11 @@ R-STUDIO
 conda install $Y -c r rstudio
 
 
+conda install $Y -c r r-devtools
+conda install $Y -c r r-roxygen2
+conda install $Y -c r r-testthat
+
+
 ```
 
 
@@ -32,7 +37,19 @@ conda install $Y -c r r-sparklyr
 conda install $Y -c anaconda h2o
 
 
+
 ```
+
+R SCALA
+-------
+
+```
+
+# conda install $Y -c dbdahl r-scala
+
+
+```
+
 
 
 
