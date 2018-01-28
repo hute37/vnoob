@@ -1,0 +1,90 @@
+{% set version = '2.5.0' %}
+
+{% set posix = 'm2-' if win else '' %}
+{% set native = 'm2w64-' if win else '' %}
+
+package:
+  name: r-rscala
+  version: {{ version|replace("-", "_") }}
+
+source:
+  fn: rscala_{{ version }}.tar.gz
+  url:
+    - https://cran.r-project.org/src/contrib/rscala_{{ version }}.tar.gz
+    - https://cran.r-project.org/src/contrib/Archive/rscala/rscala_{{ version }}.tar.gz
+  sha256: 0811e518b5793dcf68f00fbd660bc1f907d73d9a8ad84316bf9d835e75c272d5
+
+
+  # patches:
+   # List any patch files here
+   # - fix.patch
+
+build:
+  merge_build_host: True  # [win]
+  # If this is a new build for the same version, increment the build number.
+  number: 0
+  noarch: generic
+
+  # This is required to make R link correctly on Linux.
+  rpaths:
+    - lib/R/lib/
+    - lib/
+
+# Suggests: knitr, microbenchmark, rJava, xtable
+requirements:
+  build:
+
+  host:
+    - r-base
+
+  run:
+    - r-base
+
+test:
+  commands:
+    # You can put additional test commands to be run here.
+    - $R -e "library('rscala')"           # [not win]
+    - "\"%R%\" -e \"library('rscala')\""  # [win]
+
+  # You can also put a file called run_test.py, run_test.sh, or run_test.bat
+  # in the recipe that will be run at test time.
+
+  # requires:
+    # Put any additional test requirements here.
+
+about:
+  home: https://github.com/dbdahl/rscala
+  license: GPL (>= 2) | BSD_3_clause + file LICENSE
+  summary: The 'Scala' <http://www.scala-lang.org/> interpreter is embedded in 'R' and callbacks
+    to 'R' from the embedded interpreter are supported. Conversely, the 'R' interpreter
+    is embedded in 'Scala'. 'Scala' versions in the 2.11.x and 2.12.x series are supported.
+  license_family: GPL3
+
+
+
+# The original CRAN metadata for this package was:
+
+# Package: rscala
+# Type: Package
+# Title: Bi-Directional Interface Between 'R' and 'Scala' with Callbacks
+# Version: 2.5.0
+# Date: 2017-11-24
+# Authors@R: person(given="David B.",family="Dahl",role=c("aut","cre"),email="dahl@stat.byu.edu")
+# URL: https://github.com/dbdahl/rscala
+# BugReports: https://github.com/dbdahl/rscala/issues
+# Imports: utils
+# SystemRequirements: Scala (>= 2.11)
+# Description: The 'Scala' <http://www.scala-lang.org/> interpreter is embedded in 'R' and callbacks to 'R' from the embedded interpreter are supported. Conversely, the 'R' interpreter is embedded in 'Scala'. 'Scala' versions in the 2.11.x and 2.12.x series are supported.
+# License: GPL (>= 2) | BSD_3_clause + file LICENSE
+# VignetteBuilder: knitr
+# Suggests: knitr, microbenchmark, rJava, xtable
+# NeedsCompilation: no
+# Packaged: 2017-11-24 15:48:29 UTC; dahl
+# Author: David B. Dahl [aut, cre]
+# Maintainer: David B. Dahl <dahl@stat.byu.edu>
+# Repository: CRAN
+# Date/Publication: 2017-11-25 15:57:46 UTC
+
+# See
+# http://docs.continuum.io/conda/build.html for
+# more information about meta.yaml

@@ -13,6 +13,17 @@ conda install $Y -c r r-essentials
 
 ```
 
+R DEVTOOLS
+----------
+
+```
+
+conda install $Y -c r r-devtools
+conda install $Y -c r r-roxygen2
+conda install $Y -c r r-testthat
+
+```
+
 R-STUDIO
 --------
 
@@ -20,12 +31,27 @@ R-STUDIO
 conda install $Y -c r rstudio
 
 
-conda install $Y -c r r-devtools
-conda install $Y -c r r-roxygen2
-conda install $Y -c r r-testthat
+
+```
+
+
+
+R MISC
+------
+
+```
+
+conda install $Y -c r r-rserve
+conda install $Y -c r r-rcurl
+conda install $Y -c r r-RJSONIO
+conda install $Y -c r r-jpeg
+conda install $Y -c r r-png
+
+# conda install --channel https://conda.anaconda.org/bioconda bioconductor-edger
 
 
 ```
+
 
 
 R SPARK
