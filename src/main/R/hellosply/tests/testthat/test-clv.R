@@ -23,7 +23,7 @@ setup({
   config$spark.executor.memory <- "1G"
 
   sc <<- spark_connect(master="yarn-client", config=config, version = '2.0.0.2.5.0.0')
-  #sc <<- spark_connect(master = "local")
+  #  sc <<- spark_connect(master = "local")
 
 })
 
@@ -78,13 +78,18 @@ test_that("can eval BTYD model, distributed in spark with sparklyr", {
   ## ----tidy=FALSE----------------------------------------------------------
 
   cal.cbs.df <- tibble::rownames_to_column(data.frame(cal.cbs),"cust")
+  colnames(cal.cbs.df) <- c("cust", "x", "t_x", "T_cal")
 
   cal.cbs.df.est <- cal.cbs.df %>%
     mutate(
       est.CET = pnbd.ConditionalExpectedTransactions(params, T.star = 52,
-                                                     x, t.x, T.cal),
-      est.PAL = pnbd.PAlive(params, x, t.x, T.cal)
+                                                     x, t_x, T_cal),
+      est.PAL = pnbd.PAlive(params, x, t_x, T_cal)
     )
+
+  str(cal.cbs.df.est)
+  head(cal.cbs.df.est)
+
 
   ## ----tidy=FALSE----------------------------------------------------------
 
@@ -92,19 +97,30 @@ test_that("can eval BTYD model, distributed in spark with sparklyr", {
   src_tbls(sc)
 
   clv_tbl <- spark_apply(cbs_tbl, function(df) {
+    df
+  })
+
+  clv_tbl <- spark_apply(cbs_tbl, function(df) {
+    data.frame(zzz=(df$x + df$t_x + df$T_cal))
+  })
+
+  clv_tbl <- spark_apply(cbs_tbl, function(df) {
+    df$est.CET <- BTYD::pnbd.ConditionalExpectedTransactions(params, T.star = 52, df$x, df$t_x, df$T_cal)
+    df$est.PAL <- BTYD::pnbd.PAlive(params, df$x, df$t_x, df$T_cal)
+  })
+
+  clv_tbl <- spark_apply(cbs_tbl, function(df) {
       dplyr::mutate(df,
         est.CET = BTYD::pnbd.ConditionalExpectedTransactions(params, T.star = 52,
-                                                       x, t.x, T.cal),
-        est.PAL = BTYD::pnbd.PAlive(params, x, t.x, T.cal)
+                                                       x, t_x, T_cal),
+        est.PAL = BTYD::pnbd.PAlive(params, x, t_x, T_cal)
       )
   })
 
-
-  src_tbls(sc)
-
   clv.df <- clv_tbl %>% collect
 
-  src_tbls(sc)
+  str(clv.df)
+  head(clv.df)
 
 
 
