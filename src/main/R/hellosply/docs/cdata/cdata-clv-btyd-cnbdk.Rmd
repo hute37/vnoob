@@ -1,0 +1,269 @@
+---
+title: "CLV-BTYD test"
+output: html_notebook
+---
+
+Info
+====
+
+cdata/CLV-BTYD-Plus expectation (M)BG/CNBD-k model test
+
+
+References
+==========
+
+CRAN
+----
+
+### BTYD-Plus
+
+ * [BTYDplus::mbgcnbd.PAlive](https://github.com/mplatzer/BTYDplus/blob/master/R/mbg-cnbd-k.R#L356)
+ * [BTYDplus::mbgcnbd.ConditionalExpectedTransactions](https://github.com/mplatzer/BTYDplus/blob/master/R/mbg-cnbd-k.R#L436)
+
+
+### GSL/2F1
+
+ * [hyperg_2F1.c](http://git.savannah.gnu.org/cgit/gsl.git/tree/specfunc/hyperg_2F1.c)
+ 
+
+
+Pre-Requisites
+==============
+
+
+GSL
+---
+
+System-level binaries (optional)
+
+```
+sudo apt-get install libgsl2  libgsl-dev gsl-bin  gsl-ref-html  gsl-ref-psdoc
+```
+
+R Wrapper
+
+```{r}
+library(gsl)
+
+```
+
+
+
+CRAN
+----
+
+```{r}
+library(BTYD)
+library(BTYDplus)
+
+```
+
+```{r}
+library(readr)
+library(dplyr)
+library(ggplot2)
+
+```
+
+
+CLV Test
+========
+
+Definition
+----------
+
+```{r}
+clv_config <- function() {
+  enable_gsl <<- FALSE
+  dropout_at_zero <<- TRUE
+  
+}
+clv_config()
+```
+
+```{r}
+clv_params <- function(
+  k,
+  r,
+  alpha,
+  a,
+  b
+) {
+    params <- c(k,r,alpha,a,b)
+    names(params) <- c("k","r","alpha","a","b")
+    
+    return(params)
+    
+}
+```
+
+
+```{r}
+clv_calc <- function(
+  params,
+  
+  x,
+  t.x,
+  T.cal,
+  T.star,
+
+  pChurn,
+  vavg
+
+) {
+  
+  k <- params["k"]
+  r <- params["r"]
+  alpha <- params["alpha"]
+  a <- params["a"]
+  b <- params["b"]
+  
+  res = c()
+  res.params <- params
+  
+
+  if (round(a, 2) == 1)
+    a <- a + 0.01  # P1 not defined for a=1, so we add slight noise in such rare cases
+
+  if ((enable_gsl) && requireNamespace("gsl", quietly = TRUE)) {
+    h2f1 <- gsl::hyperg_2F1
+  } else {
+    # custom R implementation of h2f1 taken from BTYD source code
+    h2f1 <- function(a, b, c, z) {
+      lenz <- length(z)
+      j <- 0
+      uj <- 1:lenz
+      uj <- uj / uj
+      y <- uj
+      lteps <- 0
+      while (lteps < lenz) {
+        lasty <- y
+        j <- j + 1
+        uj <- uj * (a + j - 1) * (b + j - 1) / (c + j - 1) * z / j
+        y <- y + uj
+        lteps <- sum(y == lasty)
+      }
+      return(y)
+    }
+  }
+  # approximate via expression for conditional expected transactions for BG/NBD
+  # model, but adjust scale parameter by k
+  G <- function(r, alpha, a, b) 1 - (alpha / (alpha + T.star)) ^ r * h2f1(r, b + 1, a + b, T.star / (alpha + T.star))
+  P1 <- (a + b + x - 1 + ifelse(dropout_at_zero, 1, 0)) / (a - 1)
+  P2 <- G(r + x, k * alpha + T.cal, a, b + x - 1 + ifelse(dropout_at_zero, 1, 0))
+  #P3 <- xbgcnbd.PAlive(params = params, x = x, t.x = t.x, T.cal = T.cal, dropout_at_zero = dropout_at_zero)
+  P3 <- 1.0 - pChurn
+  exp <- P1 * P2 * P3
+  vv <- exp * vavg
+  
+  res["exp.before"] <- exp
+  res["val.before"] <- vv
+  
+  exp2 <- exp
+
+  # Adjust bias BG/NBD-based approximation by scaling via the Unconditional
+  # Expectations (for wich we have exact expression). Only do so, if we can
+  # safely assume that the full customer cohort is passed.
+  
+  #do.bias.corr <- k > 1 && length(x) == length(t.x) && length(x) == length(T.cal) && length(x) >= 100
+  
+  do.bias.corr <- k > 1 # && length(x) == length(t.x) && length(x) == length(T.cal) && length(x) >= 100
+  if (do.bias.corr) {
+    sum.cal <- sum(BTYDplus:::xbgcnbd.Expectation(params = params, t = T.cal, dropout_at_zero = dropout_at_zero))
+    sum.tot <- sum(BTYDplus:::xbgcnbd.Expectation(params = params, t = T.cal + T.star, dropout_at_zero = dropout_at_zero))
+    bias.corr <- (sum.tot - sum.cal) / sum(exp)
+    exp2 <- exp * bias.corr
+  }
+  vv2 <- exp2 * vavg
+  
+  res["exp.after"] <- exp2
+  res["val.after"] <- vv2
+  
+  res["exp.diff.abs"] <- exp2 - exp
+  res["val.diff.abs"] <- vv2 - vv
+  
+  res["exp.diff.rel"] <- (exp2 - exp) / exp2
+  res["val.diff.rel"] <- (vv2 - vv) / vv2
+  
+  return(res)
+
+}
+```
+
+
+Case:1 - (k = 1)
+----------------
+
+
+```{r}
+clv_test_1 <- function() {
+  
+  k <- 1
+  r <- 0.41916730555555555
+  alpha <- 17.36728484
+  a <- 0.840583193
+  b <- 1.35516062
+  
+  x <- 0
+  t.x <- 0.0
+  T.cal <- 157.42857142857142
+  T.cal <- 157.4286
+  T.star <- 104.28571428571429
+
+
+  pChurn <- 0.6201749246798227
+
+  vavg <- 0 # todo : recalc value ....
+  
+  
+  params <- clv_params(k,r,alpha,a,b)
+  
+  res <- clv_calc(params, x,t.x,T.cal,T.star, pChurn, vavg)
+  
+  cat("test1: (k = 1) => \n")
+  res
+
+}
+clv_test_1()
+```
+
+
+Case:2 - (k > 1)
+----------------
+
+utilizza "bias" correction se verificata la condizione: 
+`k > 1 && length(x) == length(t.x) && length(x) == length(T.cal) && length(x) >= 100`
+
+
+```{r}
+clv_test_2 <- function() {
+  
+
+  k <- 4
+  r <- 0.41916730555555555
+  alpha <- 17.36728484
+  a <- 0.840583193
+  b <- 1.35516062
+  
+  x <- 0
+  t.x <- 0.0
+  T.cal <- 90.42857142857143
+  T.star <- 104.28571428571429
+
+  pChurn <- 0.43919027543679623
+
+  vavg <- 980.489769848816
+  
+  
+  params <- clv_params(k,r,alpha,a,b)
+  
+  res <- clv_calc(params, x,t.x,T.cal,T.star, pChurn, vavg)
+  
+  cat("test2: (k > 1) => \n")
+  res
+
+}
+clv_test_2()
+```
+
+

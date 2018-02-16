@@ -7,20 +7,27 @@ library(dplyr)
 
 setup({
 
-  # Sys.setenv(SPARK_HOME = "/usr/hdp/current/spark2-client/")
-  # Sys.setenv(HADOOP_CONF_DIR = '/etc/hadoop/conf.cloudera.hdfs')
-  # Sys.setenv(YARN_CONF_DIR = '/etc/hadoop/conf.cloudera.yarn')
 
-  Sys.getenv("SPARK_HOME")
-  spark_default_vers <- '2.0.0.2.5.0.0'
+  use_spark_yarn <- FALSE
 
-  config <- spark_config()
-  config$spark.executor.instances <- 2
-  config$spark.executor.cores <- 2
-  config$spark.executor.memory <- "1G"
+  if (use_spark_yarn) {
 
-  sc <<- spark_connect(master="yarn-client", config=config, version = '2.0.0.2.5.0.0')
-  #sc <<- spark_connect(master = "local")
+    # Sys.setenv(SPARK_HOME = "/usr/hdp/current/spark2-client/")
+    # Sys.setenv(HADOOP_CONF_DIR = '/etc/hadoop/conf.cloudera.hdfs')
+    # Sys.setenv(YARN_CONF_DIR = '/etc/hadoop/conf.cloudera.yarn')
+
+    Sys.getenv("SPARK_HOME")
+    spark_default_vers <- '2.0.0.2.5.0.0'
+
+    config <- spark_config()
+    config$spark.executor.instances <- 2
+    config$spark.executor.cores <- 2
+    config$spark.executor.memory <- "1G"
+
+    sc <<- spark_connect(master="yarn-client", config=config, version = '2.0.0.2.5.0.0')
+  } else {
+    sc <<- spark_connect(master = "local")
+  }
 
 })
 

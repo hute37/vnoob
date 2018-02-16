@@ -8,22 +8,30 @@ library(BTYD)
 
 library(ggplot2)
 
+
 setup({
 
-  # Sys.setenv(SPARK_HOME = "/usr/hdp/current/spark2-client/")
-  # Sys.setenv(HADOOP_CONF_DIR = '/etc/hadoop/conf.cloudera.hdfs')
-  # Sys.setenv(YARN_CONF_DIR = '/etc/hadoop/conf.cloudera.yarn')
+  use_spark_yarn <- FALSE
 
-  Sys.getenv("SPARK_HOME")
-  spark_default_vers <- '2.0.0.2.5.0.0'
+  if (use_spark_yarn) {
 
-  config <- spark_config()
-  config$spark.executor.instances <- 2
-  config$spark.executor.cores <- 2
-  config$spark.executor.memory <- "1G"
+    # Sys.setenv(SPARK_HOME = "/usr/hdp/current/spark2-client/")
+    # Sys.setenv(HADOOP_CONF_DIR = '/etc/hadoop/conf.cloudera.hdfs')
+    # Sys.setenv(YARN_CONF_DIR = '/etc/hadoop/conf.cloudera.yarn')
 
-  sc <<- spark_connect(master="yarn-client", config=config, version = '2.0.0.2.5.0.0')
-  #  sc <<- spark_connect(master = "local")
+    Sys.getenv("SPARK_HOME")
+    spark_default_vers <- '2.0.0.2.5.0.0'
+
+    config <- spark_config()
+    config$spark.executor.instances <- 2
+    config$spark.executor.cores <- 2
+    config$spark.executor.memory <- "1G"
+
+    sc <<- spark_connect(master="yarn-client", config=config, version = '2.0.0.2.5.0.0')
+  } else {
+    sc <<- spark_connect(master = "local")
+  }
+
 
 })
 
@@ -33,7 +41,7 @@ teardown({
 
 
 
-test_that("can eval BTYD model, distributed in spark with sparklyr", {
+x_test_that("can eval BTYD model, distributed in spark with sparklyr", {
 
 
   ## ----message=FALSE, tidy=FALSE-------------------------------------------
@@ -104,7 +112,7 @@ test_that("can eval BTYD model, distributed in spark with sparklyr", {
     data.frame(zzz=(df$x + df$t_x + df$T_cal))
   })
 
-  clv_tbl <- spark_apply(cbs_tbl, function(df) {
+  clv_tbl <- spark_apply(cbs_tbl, function(df, context=params) {
     df$est.CET <- BTYD::pnbd.ConditionalExpectedTransactions(params, T.star = 52, df$x, df$t_x, df$T_cal)
     df$est.PAL <- BTYD::pnbd.PAlive(params, df$x, df$t_x, df$T_cal)
   })
@@ -132,7 +140,7 @@ test_that("can eval BTYD model, distributed in spark with sparklyr", {
 
 
 
-test_that("can run BTYD vignette: https://github.com/cran/BTYD/blob/master/inst/doc/BTYD-walkthrough.R", {
+x_test_that("can run BTYD vignette: https://github.com/cran/BTYD/blob/master/inst/doc/BTYD-walkthrough.R", {
 
 
   ## ----message=FALSE, tidy=FALSE-------------------------------------------
@@ -279,7 +287,7 @@ test_that("can run BTYD vignette: https://github.com/cran/BTYD/blob/master/inst/
 
 
 
-test_that("can run BTYD example: https://gist.github.com/mattbaggott/5113177", {
+x_test_that("can run BTYD example: https://gist.github.com/mattbaggott/5113177", {
 
 
   #
@@ -650,7 +658,7 @@ test_that("can run BTYD example: https://gist.github.com/mattbaggott/5113177", {
 
 
 
-test_that("spark_apply works in distributed mode", {
+x_test_that("spark_apply works in distributed mode", {
 
   return
 

@@ -12,7 +12,10 @@ Imports: magrittr,
     sparklyr,
     dplyr,
     DBI,
-    datasets
+    datasets,
+    BTYD,
+    BTYDplus
 Suggests: testthat, 
-    ggplot2
+    ggplot2,
+    gsl
 RoxygenNote: 6.0.1

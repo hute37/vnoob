@@ -1,0 +1,300 @@
+---
+title: "CLV-QUANTILE test"
+output: html_notebook
+---
+
+Info
+====
+
+cdata/CLV quantile vs Spark approxQuantile vs Hive percentile* precision
+
+
+References
+==========
+
+Definition
+-----
+
+### Stats
+
+ * [Wikipedia: Quantile Estimation](https://en.wikipedia.org/wiki/Quantile#Estimating_quantiles_from_a_sample)
+ * [R quantile](https://stat.ethz.ch/R-manual/R-devel/library/stats/html/quantile.html)
+ * [Wolfram MathWorld](http://mathworld.wolfram.com/Quantile.html)
+ * [SAS blogs](https://blogs.sas.com/content/iml/2017/05/24/definitions-sample-quantiles.html)
+
+
+### Spark
+
+ * [API doc](http://spark.apache.org/docs/latest/api/R/approxQuantile.html)
+ * [Databricks Blogs](https://databricks.com/blog/2016/05/19/approximate-algorithms-in-apache-spark-hyperloglog-and-quantiles.html)
+ * [Article](http://infolab.stanford.edu/~datar/courses/cs361a/papers/quantiles.pdf)
+ 
+
+### Hive
+
+ * [API doc](https://cwiki.apache.org/confluence/display/Hive/LanguageManual+UDF)
+ 
+
+
+Pre-Requisites
+==============
+
+
+CRAN
+----
+
+```{r}
+library(readr)
+library(dplyr)
+library(ggplot2)
+
+```
+
+
+
+SPARK
+=====
+
+Spark Shell
+-----------
+
+Example of _Spark_ *approxQuantile* and _Hive_ *percentile* invocation 
+
+```{r}
+Comment <- function(`@Comments`) {invisible()}
+
+q_test_spark <- function() {
+  # spark-shell
+  Comment(`
+
+          import org.apache.spark.sql._
+          import org.apache.spark.sql.functions._
+          import scala.io.Source
+          import spark.implicits._
+
+          val dataFile = "./data/clv_sample_orders.csv"
+          val dateFrom = "2015-12-13"
+          val dateTo = "2015-12-13"
+          
+          val paramsQuantiles = Seq(0.1, 0.25, 0.5, 0.85, 0.9)
+
+          val ds = Source.fromFile(fn)
+          .getLines.drop(1).toList.map(_.split(",")).map(x => (x(0), x(3), x(2).toDouble))
+          .toDS.cache
+          ds.show
+
+          val tst: Dataset[Double] = ds
+          .filter(r => r._2 >= dateFrom && r._2 < dateTo)
+          .groupBy("_1").agg(sum("_3").alias("s")).select("s").filter("s > 0").as[Double]
+
+          println(tst.count)
+          println(tst.groupBy(lit(1)).agg(sum("s")).collect.apply(0))
+
+          val ttt = tst
+          // val ttt = tst.union(tst).union(tst).union(tst).union(tst).union(tst).union(tst)
+          //     .union(tst).union(tst).union(tst).union(tst).union(tst).union(tst)
+
+          val q = ttt.stat.approxQuantile("s", paramsQuantiles.toArray, 0.0)
+
+          println("\n\n\nQUANTILES => \n\n\n qk.approx <- "+(q.toList.toString).replaceAll("List\\(","c\\(")+" \n\n\n")
+
+
+          val tempTable = s"tst_tst"
+          ttt.createOrReplaceTempView(tempTable)
+          //val str = para
+          spark.sqlContext.sql("select percentile_approx(s, 0.9) from tst_tst").show
+          spark.sqlContext.sql("select percentile(s, 0.9) from tst_tst").show
+          spark.catalog.dropTempView(tempTable)
+
+
+  `)
+
+}
+```
+
+
+CLV Test
+========
+
+Definition
+----------
+
+```{r}
+q_config <- function() {
+  
+  cnf <- new.env()
+  
+  cnf$input_data_base <- c(".","./data", "../data", "../../data") # set current directory
+  cnf$input_data_file <- "clv_sample_orders.csv"
+
+  cnf$date.min <- as.Date('2015-12-13')
+  cnf$date.max <- as.Date('2017-12-13')
+
+  cnf$qp.inner <- c(0.1, 0.25, 0.5, 0.85, 0.9)
+  
+  cnf$qp <- c(0, cnf$qp.inner, 1.0) # seq(0,1, by=0.25)
+  cnf$qt <- c(1:9) # R quantile type
+  
+  config <<- cnf
+  
+  return (cnf)
+}
+cnf <- q_config()
+```
+
+```{r}
+q_find_file <- function(name, cnf = config) {
+  
+  base <- cnf$input_data_base
+  
+  for (p in base){
+    fn <- paste(p, name, sep = "/")
+      cat("+++ ??? check file: ", fn, " in ", getwd(), "\n")
+    
+    if (file.exists(fn)) {
+      cat("+++ found input data file: ", fn, "\n")
+      return (fn)
+    }
+  }  
+  stop(paste("input data not found:", name, "in", base))
+}
+```
+
+
+
+
+```{r}
+clv_load_data <- function(name, cnf = config) {
+  
+  fn <- q_find_file(name, cnf)
+
+  clv_sample_orders <- read_csv(fn, col_types = cols(
+    date = col_date(format = "%Y-%m-%d"),
+    raw_date = col_date(format = "%Y-%m-%d")))
+
+  #View(clv_sample_orders)
+
+  dt.a <- cnf$date.min
+  dt.b <- cnf$date.max
+
+  clv_sales.z <- clv_sample_orders %>%
+    filter((raw_date >= dt.a)) %>%
+    filter((raw_date < dt.b)) %>%
+    group_by(customer_id) %>%
+    summarize(total=(sum(sales)))
+
+  clv_sales <<- clv_sales.z[clv_sales.z$total > 0,]
+
+  return(clv_sales)
+    
+}
+
+```
+
+
+```{r}
+q_verify <- function(x, qk, qp, qt, cnf = config) {
+  
+  res <- c()
+  
+  res$x <- x
+  res$n <- length(x)
+  
+  res$qk <- qk   # spark quantiles (with 0.0 and 1.0 values)
+  res$qp <- qp   # quantile prob level to consider
+  res$qt <- qt   # R quantile types
+
+  norm_vec <- function(x) sqrt(sum(x^2))
+
+  # compute r quantiles for all supported types  
+  qm <- matrix(nrow=length(qt), ncol=length(qp))
+  for (t in qt) {
+    qm[t,] <- quantile(x, probs = qp, type = t)
+  }
+  res$qm <- qm
+  
+  # find best match with min norm(diff)
+  qr <- matrix(nrow=length(qt), ncol=length(qp))
+  qu <- matrix(nrow=length(qt), ncol=length(qp))
+  qe <- 0.0
+  for (t in qt) {
+    qr[t,] <- qm[t,] - qk
+    qu[t,] <- qr[t,]/qm[t,]*100.0
+    qe[t] <- norm_vec(qr[t,])  # norm_2 diffference
+  }
+  res$qr <- qr
+  res$qu <- qu
+  res$qe <- qe
+  
+  qi.e <- which.min(qe)     # best match (norm)  with min difference
+  res$qi.e <- qi.e
+
+  res$o.e.qm <- qm[qi.e,]   # best match among all R quntiles
+  res$o.e.qr <- qr[qi.e,]   # difference with best match
+  
+  
+  qs <- qm %*% qk           # scalar product
+
+  qi.s <- which.max(qs)     # best match (scalar prod) with max alignment
+  
+  res$qs <- qs
+  res$qi.s <- qi.s
+  
+  
+  qi <- qi.e      # use norm for best match
+  ql <- qm[qi,]
+  qd <- qk -ql
+  
+  res$qi <- qi  # index of best match 
+  res$ql <- ql  # values of best match 
+  res$qd <- qd  # difference of best match 
+  
+
+  q <- ql
+  
+  req.q <- ql 
+  return(res)
+
+}
+```
+
+
+
+
+Case:1 - #755 distinct customers
+-------------------------------
+
+
+```{r}
+q_clv_test_1 <- function(cnf = config) {
+
+  name <- cnf$input_data_file
+  
+  clv_sales <- clv_load_data(name,cnf)
+
+  sale.min <- min(clv_sales$total)
+  sale.max <- max(clv_sales$total)
+  
+  x <- clv_sales$total
+  names(x) <- clv_sales$customer_id
+  
+
+  # spark approxQuantile => List(132.537313432836, 261.919559619995, 579.17, 2967.458968127149, 4316.64192111549)
+  qk.approx <- c(132.537313432836, 261.919559619995, 579.17, 2967.458968127149, 4316.64192111549)
+  qk <- c(sale.min, qk.approx, sale.max)
+  
+  qp <- cnf$qp
+  qt <- cnf$qt
+  
+  res <- q_verify(x, qk, qp, qt)
+  
+  cat("test1: (#755) => \n")
+  res
+
+}
+q_clv_test_1()
+```
+
+
+
+
