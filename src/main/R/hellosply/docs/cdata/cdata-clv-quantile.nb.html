@@ -228,54 +228,41 @@ library(ggplot2)</code></pre>
 <p>Example of <em>Spark</em> <em>approxQuantile</em> and <em>Hive</em> <em>percentile</em> invocation</p>
 <!-- rnb-text-end -->
 <!-- rnb-chunk-begin -->
-<!-- rnb-source-begin eyJkYXRhIjoiYGBgclxuQ29tbWVudCA8LSBmdW5jdGlvbihgQENvbW1lbnRzYCkge2ludmlzaWJsZSgpfVxuXG5xX3Rlc3Rfc3BhcmsgPC0gZnVuY3Rpb24oKSB7XG4gICMgc3Bhcmstc2hlbGxcbiAgQ29tbWVudChgXG5cbiAgICAgICAgICBpbXBvcnQgb3JnLmFwYWNoZS5zcGFyay5zcWwuX1xuICAgICAgICAgIGltcG9ydCBvcmcuYXBhY2hlLnNwYXJrLnNxbC5mdW5jdGlvbnMuX1xuICAgICAgICAgIGltcG9ydCBzY2FsYS5pby5Tb3VyY2VcbiAgICAgICAgICBpbXBvcnQgc3BhcmsuaW1wbGljaXRzLl9cblxuICAgICAgICAgIHZhbCBkYXRhRmlsZSA9IFwiLi9kYXRhL2Nsdl9zYW1wbGVfb3JkZXJzLmNzdlwiXG4gICAgICAgICAgdmFsIGRhdGVGcm9tID0gXCIyMDE1LTEyLTEzXCJcbiAgICAgICAgICB2YWwgZGF0ZVRvID0gXCIyMDE1LTEyLTEzXCJcbiAgICAgICAgICBcbiAgICAgICAgICB2YWwgcGFyYW1zUXVhbnRpbGVzID0gU2VxKDAuMSwgMC4yNSwgMC41LCAwLjg1LCAwLjkpXG5cbiAgICAgICAgICB2YWwgZHMgPSBTb3VyY2UuZnJvbUZpbGUoZm4pXG4gICAgICAgICAgLmdldExpbmVzLmRyb3AoMSkudG9MaXN0Lm1hcChfLnNwbGl0KFwiLFwiKSkubWFwKHggPT4gKHgoMCksIHgoMyksIHgoMikudG9Eb3VibGUpKVxuICAgICAgICAgIC50b0RTLmNhY2hlXG4gICAgICAgICAgZHMuc2hvd1xuXG4gICAgICAgICAgdmFsIHRzdDogRGF0YXNldFtEb3VibGVdID0gZHNcbiAgICAgICAgICAuZmlsdGVyKHIgPT4gci5fMiA+PSBkYXRlRnJvbSAmJiByLl8yIDwgZGF0ZVRvKVxuICAgICAgICAgIC5ncm91cEJ5KFwiXzFcIikuYWdnKHN1bShcIl8zXCIpLmFsaWFzKFwic1wiKSkuc2VsZWN0KFwic1wiKS5maWx0ZXIoXCJzID4gMFwiKS5hc1tEb3VibGVdXG5cbiAgICAgICAgICBwcmludGxuKHRzdC5jb3VudClcbiAgICAgICAgICBwcmludGxuKHRzdC5ncm91cEJ5KGxpdCgxKSkuYWdnKHN1bShcInNcIikpLmNvbGxlY3QuYXBwbHkoMCkpXG5cbiAgICAgICAgICB2YWwgdHR0ID0gdHN0XG4gICAgICAgICAgLy8gdmFsIHR0dCA9IHRzdC51bmlvbih0c3QpLnVuaW9uKHRzdCkudW5pb24odHN0KS51bmlvbih0c3QpLnVuaW9uKHRzdCkudW5pb24odHN0KVxuICAgICAgICAgIC8vICAgICAudW5pb24odHN0KS51bmlvbih0c3QpLnVuaW9uKHRzdCkudW5pb24odHN0KS51bmlvbih0c3QpLnVuaW9uKHRzdClcblxuICAgICAgICAgIHZhbCBxID0gdHR0LnN0YXQuYXBwcm94UXVhbnRpbGUoXCJzXCIsIHBhcmFtc1F1YW50aWxlcy50b0FycmF5LCAwLjApXG5cbiAgICAgICAgICBwcmludGxuKFwiXFxuXFxuXFxuUVVBTlRJTEVTID0+IFxcblxcblxcbiBxay5hcHByb3ggPC0gXCIrKHEudG9MaXN0LnRvU3RyaW5nKS5yZXBsYWNlQWxsKFwiTGlzdFxcXFwoXCIsXCJjXFxcXChcIikrXCIgXFxuXFxuXFxuXCIpXG5cblxuICAgICAgICAgIHZhbCB0ZW1wVGFibGUgPSBzXCJ0c3RfdHN0XCJcbiAgICAgICAgICB0dHQuY3JlYXRlT3JSZXBsYWNlVGVtcFZpZXcodGVtcFRhYmxlKVxuICAgICAgICAgIC8vdmFsIHN0ciA9IHBhcmFcbiAgICAgICAgICBzcGFyay5zcWxDb250ZXh0LnNxbChcInNlbGVjdCBwZXJjZW50aWxlX2FwcHJveChzLCAwLjkpIGZyb20gdHN0X3RzdFwiKS5zaG93XG4gICAgICAgICAgc3Bhcmsuc3FsQ29udGV4dC5zcWwoXCJzZWxlY3QgcGVyY2VudGlsZShzLCAwLjkpIGZyb20gdHN0X3RzdFwiKS5zaG93XG4gICAgICAgICAgc3BhcmsuY2F0YWxvZy5kcm9wVGVtcFZpZXcodGVtcFRhYmxlKVxuXG5cbiAgYClcblxufVxuYGBgIn0= -->
+<!-- rnb-source-begin eyJkYXRhIjoiYGBgclxuQ29tbWVudCA8LSBmdW5jdGlvbihgQENvbW1lbnRzYCkge2ludmlzaWJsZSgpfVxucV90ZXN0X3NwYXJrIDwtIGZ1bmN0aW9uKCkge1xuICAjIHNwYXJrLXNoZWxsXG4gIENvbW1lbnQoYFxuICAgICAgICAgIGltcG9ydCBvcmcuYXBhY2hlLnNwYXJrLnNxbC5fXG4gICAgICAgICAgaW1wb3J0IG9yZy5hcGFjaGUuc3Bhcmsuc3FsLmZ1bmN0aW9ucy5fXG4gICAgICAgICAgaW1wb3J0IHNjYWxhLmlvLlNvdXJjZVxuICAgICAgICAgIGltcG9ydCBzcGFyay5pbXBsaWNpdHMuX1xuICAgICAgICAgIHZhbCBkYXRhRmlsZSA9IFwiLi9kYXRhL2Nsdl9zYW1wbGVfb3JkZXJzLmNzdlwiXG4gICAgICAgICAgdmFsIGRhdGVGcm9tID0gXCIyMDE1LTEyLTEzXCJcbiAgICAgICAgICB2YWwgZGF0ZVRvID0gXCIyMDE1LTEyLTEzXCJcbiAgICAgICAgICBcbiAgICAgICAgICB2YWwgcGFyYW1zUXVhbnRpbGVzID0gU2VxKDAuMSwgMC4yNSwgMC41LCAwLjg1LCAwLjkpXG4gICAgICAgICAgdmFsIGRzID0gU291cmNlLmZyb21GaWxlKGZuKVxuICAgICAgICAgIC5nZXRMaW5lcy5kcm9wKDEpLnRvTGlzdC5tYXAoXy5zcGxpdChcIixcIikpLm1hcCh4ID0+ICh4KDApLCB4KDMpLCB4KDIpLnRvRG91YmxlKSlcbiAgICAgICAgICAudG9EUy5jYWNoZVxuICAgICAgICAgIGRzLnNob3dcbiAgICAgICAgICB2YWwgdHN0OiBEYXRhc2V0W0RvdWJsZV0gPSBkc1xuICAgICAgICAgIC5maWx0ZXIociA9PiByLl8yID49IGRhdGVGcm9tICYmIHIuXzIgPCBkYXRlVG8pXG4gICAgICAgICAgLmdyb3VwQnkoXCJfMVwiKS5hZ2coc3VtKFwiXzNcIikuYWxpYXMoXCJzXCIpKS5zZWxlY3QoXCJzXCIpLmZpbHRlcihcInMgPiAwXCIpLmFzW0RvdWJsZV1cbiAgICAgICAgICBwcmludGxuKHRzdC5jb3VudClcbiAgICAgICAgICBwcmludGxuKHRzdC5ncm91cEJ5KGxpdCgxKSkuYWdnKHN1bShcInNcIikpLmNvbGxlY3QuYXBwbHkoMCkpXG4gICAgICAgICAgdmFsIHR0dCA9IHRzdFxuICAgICAgICAgIC8vIHZhbCB0dHQgPSB0c3QudW5pb24odHN0KS51bmlvbih0c3QpLnVuaW9uKHRzdCkudW5pb24odHN0KS51bmlvbih0c3QpLnVuaW9uKHRzdClcbiAgICAgICAgICAvLyAgICAgLnVuaW9uKHRzdCkudW5pb24odHN0KS51bmlvbih0c3QpLnVuaW9uKHRzdCkudW5pb24odHN0KS51bmlvbih0c3QpXG4gICAgICAgICAgdmFsIHEgPSB0dHQuc3RhdC5hcHByb3hRdWFudGlsZShcInNcIiwgcGFyYW1zUXVhbnRpbGVzLnRvQXJyYXksIDAuMClcbiAgICAgICAgICBwcmludGxuKFwiXFxuXFxuXFxuUVVBTlRJTEVTID0+IFxcblxcblxcbiBxay5hcHByb3ggPC0gXCIrKHEudG9MaXN0LnRvU3RyaW5nKS5yZXBsYWNlQWxsKFwiTGlzdFxcXFwoXCIsXCJjXFxcXChcIikrXCIgXFxuXFxuXFxuXCIpXG4gICAgICAgICAgdmFsIHRlbXBUYWJsZSA9IHNcInRzdF90c3RcIlxuICAgICAgICAgIHR0dC5jcmVhdGVPclJlcGxhY2VUZW1wVmlldyh0ZW1wVGFibGUpXG4gICAgICAgICAgLy92YWwgc3RyID0gcGFyYVxuICAgICAgICAgIHNwYXJrLnNxbENvbnRleHQuc3FsKFwic2VsZWN0IHBlcmNlbnRpbGVfYXBwcm94KHMsIDAuOSkgZnJvbSB0c3RfdHN0XCIpLnNob3dcbiAgICAgICAgICBzcGFyay5zcWxDb250ZXh0LnNxbChcInNlbGVjdCBwZXJjZW50aWxlKHMsIDAuOSkgZnJvbSB0c3RfdHN0XCIpLnNob3dcbiAgICAgICAgICBzcGFyay5jYXRhbG9nLmRyb3BUZW1wVmlldyh0ZW1wVGFibGUpXG4gIGApXG59XG5gYGAifQ== -->
 <pre class="r"><code>Comment &lt;- function(`@Comments`) {invisible()}
-
 q_test_spark &lt;- function() {
   # spark-shell
   Comment(`
-
           import org.apache.spark.sql._
           import org.apache.spark.sql.functions._
           import scala.io.Source
           import spark.implicits._
-
           val dataFile = &quot;./data/clv_sample_orders.csv&quot;
           val dateFrom = &quot;2015-12-13&quot;
           val dateTo = &quot;2015-12-13&quot;
           
           val paramsQuantiles = Seq(0.1, 0.25, 0.5, 0.85, 0.9)
-
           val ds = Source.fromFile(fn)
           .getLines.drop(1).toList.map(_.split(&quot;,&quot;)).map(x =&gt; (x(0), x(3), x(2).toDouble))
           .toDS.cache
           ds.show
-
           val tst: Dataset[Double] = ds
           .filter(r =&gt; r._2 &gt;= dateFrom &amp;&amp; r._2 &lt; dateTo)
           .groupBy(&quot;_1&quot;).agg(sum(&quot;_3&quot;).alias(&quot;s&quot;)).select(&quot;s&quot;).filter(&quot;s &gt; 0&quot;).as[Double]
-
           println(tst.count)
           println(tst.groupBy(lit(1)).agg(sum(&quot;s&quot;)).collect.apply(0))
-
           val ttt = tst
           // val ttt = tst.union(tst).union(tst).union(tst).union(tst).union(tst).union(tst)
           //     .union(tst).union(tst).union(tst).union(tst).union(tst).union(tst)
-
           val q = ttt.stat.approxQuantile(&quot;s&quot;, paramsQuantiles.toArray, 0.0)
-
           println(&quot;\n\n\nQUANTILES =&gt; \n\n\n qk.approx &lt;- &quot;+(q.toList.toString).replaceAll(&quot;List\\(&quot;,&quot;c\\(&quot;)+&quot; \n\n\n&quot;)
-
           val tempTable = s&quot;tst_tst&quot;
           ttt.createOrReplaceTempView(tempTable)
           //val str = para
           spark.sqlContext.sql(&quot;select percentile_approx(s, 0.9) from tst_tst&quot;).show
           spark.sqlContext.sql(&quot;select percentile(s, 0.9) from tst_tst&quot;).show
           spark.catalog.dropTempView(tempTable)
-
-
   `)
-
 }</code></pre>
 <!-- rnb-source-end -->
 <!-- rnb-chunk-end -->
