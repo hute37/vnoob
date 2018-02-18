@@ -284,13 +284,14 @@ q_bin <- function(x, q, qk, qp, cnf = config) {
   
   df$clazz <- cut(df$x, breaks=q,include.lowest=TRUE)       # class by R quantiles
   df$clazk <- cut(df$x, breaks=qk,include.lowest=TRUE)
-#  df$iclazz <- as.numeric(as.character(df$clazz))
-#  df$iclazk <- as.numeric(as.character(df$clazk))
-#  df$diff <- df$iclazz - df$iclazk
+  df$iclazz <- as.numeric(df$clazz)
+  df$iclazk <- as.numeric(df$clazk)
+  df$diff <- df$iclazz - df$iclazk
 
-  df$diff <- as.numeric(df$clazz) - as.numeric(df$clazk)
+# df$diff <- as.numeric(df$clazz) - as.numeric(df$clazk)
 
   df.diff <- df[ df$diff != 0,]
+  df.diff <- df.diff[order(df.diff$iclazz),]
 
   dz <- df %>% count(clazz)
   dk <- df %>% count(clazk)
