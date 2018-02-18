@@ -196,13 +196,14 @@ clv_load_data <- function(name, cnf = config) {
 q_verify <- function(x, qk, qp, qt, cnf = config) {
   
   res <- c()
+  res$dm <- c()
   
   res$x <- x
-  res$n <- length(x)
+  res$dm$n <- length(x)
   
-  res$qk <- qk   # spark quantiles (with 0.0 and 1.0 values)
-  res$qp <- qp   # quantile prob level to consider
-  res$qt <- qt   # R quantile types
+  res$dm$qk <- qk   # spark quantiles (with 0.0 and 1.0 values)
+  res$dm$qp <- qp   # quantile prob level to consider
+  res$dm$qt <- qt   # R quantile types
 
   norm_vec <- function(x) sqrt(sum(x^2))
 
@@ -211,7 +212,10 @@ q_verify <- function(x, qk, qp, qt, cnf = config) {
   for (t in qt) {
     qm[t,] <- quantile(x, probs = qp, type = t)
   }
-  res$qm <- qm
+  res$dm$qm <- qm
+  
+  q7 <- quantile(x, probs = qp)
+  res$dm$q7 <- q7 # R default method
   
   # find best match with min norm(diff)
   qr <- matrix(nrow=length(qt), ncol=length(qp))
@@ -222,37 +226,108 @@ q_verify <- function(x, qk, qp, qt, cnf = config) {
     qu[t,] <- qr[t,]/qm[t,]*100.0
     qe[t] <- norm_vec(qr[t,])  # norm_2 diffference
   }
-  res$qr <- qr
-  res$qu <- qu
-  res$qe <- qe
+  res$dm$qr <- qr
+  res$dm$qu <- qu
+  res$dm$qe <- qe
   
   qi.e <- which.min(qe)     # best match (norm)  with min difference
-  res$qi.e <- qi.e
+  res$dm$qi.e <- qi.e
 
-  res$o.e.qm <- qm[qi.e,]   # best match among all R quntiles
-  res$o.e.qr <- qr[qi.e,]   # difference with best match
+  res$dm$o.e.qm <- qm[qi.e,]   # best match among all R quntiles
+  res$dm$o.e.qr <- qr[qi.e,]   # difference with best match
   
   
   qs <- qm %*% qk           # scalar product
 
   qi.s <- which.max(qs)     # best match (scalar prod) with max alignment
   
-  res$qs <- qs
-  res$qi.s <- qi.s
+  res$dm$qs <- qs
+  res$dm$qi.s <- qi.s
   
   
   qi <- qi.e      # use norm for best match
   ql <- qm[qi,]
   qd <- qk -ql
   
-  res$qi <- qi  # index of best match 
-  res$ql <- ql  # values of best match 
-  res$qd <- qd  # difference of best match 
+  res$dm$qi <- qi  # index of best match 
+  res$dm$ql <- ql  # values of best match 
+  res$dm$qd <- qd  # difference of best match 
   
 
-  q <- ql
+  #q <- ql   # best match
+  q <- q7    # default type
   
-  req.q <- ql 
+  res$dm$q <- q 
+  return(res)
+
+}
+```
+
+
+```{r}
+q_bin <- function(x, q, qk, qp, cnf = config) {
+  
+  res <- c()
+  res$dm <- c()
+  
+  # res$x <- x
+  n <- length(x)
+  res$n <- n
+  
+  res$dm$q <- q     # R computed quantile types
+  res$dm$qk <- qk   # spark quantiles (with 0.0 and 1.0 values)
+  res$dm$qp <- qp   # quantile prob level to consider
+
+  norm_vec <- function(x) sqrt(sum(x^2))
+  
+  df <- data.frame("id"= names(x), x, row.names = "id")
+  
+  df$clazz <- cut(df$x, breaks=q,include.lowest=TRUE)       # class by R quantiles
+  df$clazk <- cut(df$x, breaks=qk,include.lowest=TRUE)
+#  df$iclazz <- as.numeric(as.character(df$clazz))
+#  df$iclazk <- as.numeric(as.character(df$clazk))
+#  df$diff <- df$iclazz - df$iclazk
+
+  df$diff <- as.numeric(df$clazz) - as.numeric(df$clazk)
+
+  df.diff <- df[ df$diff != 0,]
+
+  dz <- df %>% count(clazz)
+  dk <- df %>% count(clazk)
+
+
+  dz$bin <- seq.int(nrow(dz))
+  dk$bin <- seq.int(nrow(dk))
+  
+  dz$z.pq <-dz$n / n
+  dk$k.pq <-dk$n / n
+
+  dc <- dz %>% inner_join(dk, by=c("bin"))
+  
+  dc$n.d <- dc$n.x - dc$n.y
+  dc$d.pq <-dc$n.d / n
+
+  res$df <- df
+
+  res$dz <- dz
+  res$dk <- dk
+
+  res$dc <- dc
+  
+
+  full_count <- nrow(df)
+  diff_count <- nrow(df.diff)
+  diff_rel <- diff_count / full_count
+  diff_perc <- diff_rel * 100
+
+
+  res$dm$full_count <- full_count
+  res$dm$diff_count <- diff_count
+  res$dm$diff_rel <- diff_rel
+  res$dm$diff_perc <- diff_perc
+
+  res$df.diff <- df.diff
+  
   return(res)
 
 }
@@ -260,14 +335,22 @@ q_verify <- function(x, qk, qp, qt, cnf = config) {
 
 
 
-
 Case:1 - #755 distinct customers
 -------------------------------
 
+### Load CLV Data
+
+  * file: `r config$input_data_file`
+  * time range: [2015-12-13..2017-12-13)
+
+
 
 ```{r}
-q_clv_test_1 <- function(cnf = config) {
+q_clv_test_1_load <- function(cnf = config) {
 
+  res <- c()
+  res$dm <- c()
+  
   name <- cnf$input_data_file
   
   clv_sales <- clv_load_data(name,cnf)
@@ -279,22 +362,167 @@ q_clv_test_1 <- function(cnf = config) {
   names(x) <- clv_sales$customer_id
   
 
+  res$case.name <- name
+  res$clv_sales <- clv_sales
+  res$dm$n <- nrow(clv_sales)
+  res$dm$sale.min <- sale.min
+  res$dm$sale.max <- sale.max
+
+  return (res)
+}
+res.1.in <<- q_clv_test_1_load()
+```
+
+#### test1.load:
+
+  * num.customers: `r res.1.in$dm$n`
+
+
+```{r}
+
+  res.1.in$dm
+  
+```
+
+data value summary:
+
+```{r}
+
+   summary(res.1.in$clv_sales$total)
+  
+```
+  
+
+### Quantiles with Spark.approxQuantile
+
+  * probs: `r config$qp`
+
+
+```{r}
+q_clv_test_1x <- function(cnf = config) {
+
+  res <- c()
+  res$dm <- c()
+  
+  sale.min <- res.1.in$dm$sale.min
+  sale.max <- res.1.in$dm$sale.max
+  
+  x <- res.1.in$x
+  
+
   # spark approxQuantile => List(132.537313432836, 261.919559619995, 579.17, 2967.458968127149, 4316.64192111549)
+  
+  # => see: q_test_spark()
+  
   qk.approx <- c(132.537313432836, 261.919559619995, 579.17, 2967.458968127149, 4316.64192111549)
   qk <- c(sale.min, qk.approx, sale.max)
   
   qp <- cnf$qp
   qt <- cnf$qt
   
-  res <- q_verify(x, qk, qp, qt)
   
-  cat("test1: (#755) => \n")
-  res
+  res$dm$qk <- qk
+  res$dm$qp <- qp
+  res$dm$qt <- qt
+
+  return (res)
 
 }
-q_clv_test_1()
+res.1.x <<- q_clv_test_1x()
 ```
 
+#### test1.approx:
+
+```{r}
+
+  res.1.x$dm
+  
+```
+
+
+### R Quantile Types (1..9)
+
+'quantile' default method: Type = 7
+
+```{r}
+q_clv_test_1a <- function(cnf = config) {
+
+  name <- cnf$input_data_file
+  
+  clv_sales <<- clv_load_data(name,cnf)
+
+  sale.min <- min(clv_sales$total)
+  sale.max <- max(clv_sales$total)
+  
+  x <<- clv_sales$total
+  names(x) <- clv_sales$customer_id
+  
+
+  # spark approxQuantile => List(132.537313432836, 261.919559619995, 579.17, 2967.458968127149, 4316.64192111549)
+  qk.approx <<- c(132.537313432836, 261.919559619995, 579.17, 2967.458968127149, 4316.64192111549)
+  qk <<- c(sale.min, qk.approx, sale.max)
+  
+  qp <- cnf$qp
+  qt <- cnf$qt
+  
+  res <- q_verify(x, qk, qp, qt)
+  
+  return (res)
+}
+res.1.a <<- q_clv_test_1a()
+```
+
+### test1.verify: (#755)
+
+```{r}
+
+  res.1.a$dm
+  
+```
+
+
+### Classification Difference
+
+
+```{r}
+q_clv_test_1b <- function(cnf = config) {
+
+  x <- res.1.a$x
+  q <- res.1.a$dm$q
+  qk <- res.1.a$dm$qk
+  qp <- res.1.a$dm$qp
+
+  res <- q_bin(x, q, qk, qp)
+  
+  return(res)
+
+}
+res.1.b <<- q_clv_test_1b()
+```
+
+#### test1.summary:
+
+```{r}
+
+  res.1.b$dm
+  
+```
+
+#### test1.classes:
+
+```{r}
+
+  res.1.b$dc
+  
+```
+
+
+#### test1.details:
+
+
+```{r}
+res.1.b$df.diff
+```
 
 
 
