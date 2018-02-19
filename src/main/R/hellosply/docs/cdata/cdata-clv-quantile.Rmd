@@ -74,11 +74,11 @@ q_test_spark <- function() {
 
           val dataFile = "./data/clv_sample_orders.csv"
           val dateFrom = "2015-12-13"
-          val dateTo = "2015-12-13"
+          val dateTo = "2017-12-13"
           
           val paramsQuantiles = Seq(0.1, 0.25, 0.5, 0.85, 0.9)
 
-          val ds = Source.fromFile(fn)
+          val ds = Source.fromFile(dataFile)
           .getLines.drop(1).toList.map(_.split(",")).map(x => (x(0), x(3), x(2).toDouble))
           .toDS.cache
           ds.show
@@ -111,6 +111,35 @@ q_test_spark <- function() {
 
 }
 ```
+
+```
+
+SPARK:
+
+QUANTILES => 
+
+
+ qk.approx <- c(132.537313432836, 261.919559619995, 579.17, 2967.458968127149, 4316.64192111549) 
+
+
+HIVE:
+
++------------------------------------------------+                              
+|percentile_approx(s, CAST(0.9 AS DOUBLE), 10000)|
++------------------------------------------------+
+|                                4228.62042132436|
++------------------------------------------------+
+
+18/02/19 14:51:20 WARN TaskSetManager: Stage 35 contains a task of very large size (179 KB). The maximum recommended task size is 100 KB.
++-------------------------------------+                                         
+|percentile(s, CAST(0.9 AS DOUBLE), 1)|
++-------------------------------------+
+|                    4223.396920928004|
++-------------------------------------+
+
+
+```
+
 
 
 CLV Test

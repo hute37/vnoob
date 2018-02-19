@@ -382,3 +382,29 @@ zz.xbgcnbd.ConditionalExpectedTransactions <- function(params, T.star, x, t.x, T
   }
   return(unname(exp))
 }
+
+
+
+
+qnbinom_test <- function() {
+
+  size <- 6
+  prob <- 0.4
+
+  p <- c(0:1000) / 1000.0
+
+
+  q <- qnbinom(p, size, prob, lower.tail = TRUE, log.p = FALSE)
+
+  df <-  data.frame(p,q)
+
+  ggplot(data=df, aes(x=p, y=q, group=1)) +
+    geom_line()+
+    geom_point()
+
+
+
+}
+
+
+
