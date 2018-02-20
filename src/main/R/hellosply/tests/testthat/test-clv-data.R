@@ -416,19 +416,30 @@ gamma_test <- function() {
 
   jcm.Gamma <- .jnew("org.apache.commons.math3.special.Gamma")
 
-  gamma <- function(x) {return (as.vector(lapply(x, jcm.Gamma$gamma)))}
-  lgamma <- function(x) {return (as.vector(lapply(x, jcm.Gamma$logGamma)))}
+  gamma <- function(x) {return (sapply(x, jcm.Gamma$gamma))}
+  lgamma <- function(x) {return (sapply(x, jcm.Gamma$logGamma))}
 
-  x <- c(0:1000) / 100.0
+  x <- c(1:100) / 10.0
 
 
-  y <- lgamma(x)
+  y1 <- lgamma(x)
+  y2 <- gsl::lngamma(x)
 
-  df <-  data.frame(x,y)
+  off = 0.3
 
-  ggplot(data=df, aes(x=x, y=y, group=1)) +
-    geom_line()+
-    geom_point()
+  df <-  data.frame(x,y1, y2)
+
+  ggplot(data=df, aes(x=x)) +
+    scale_color_manual(labels = c("jcm", "gsl"), values = c("red", "blue")) +
+    geom_line(aes(y=y1, color="red"))+
+    geom_point(aes(y=y1, color="red")) +
+    geom_line(aes(y=y2+off, color="blue"))+
+    geom_point(aes(y=y2+off, color="blue"))
+
+
+  ggplot(data=df, aes(x=x)) +
+    geom_line(aes(y=y1-y2, color="green"))+
+    geom_point(aes(y=y1-y2, color="green"))
 
 
 
