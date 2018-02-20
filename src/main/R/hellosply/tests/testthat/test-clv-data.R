@@ -9,6 +9,8 @@ library(gsl)
 library(BTYD)
 library(BTYDplus)
 
+library("rJava")
+library("commonsMath")
 
 
 setup({
@@ -154,6 +156,9 @@ test_that("can eval BTYDPlus model", {
 
   vv2 <- exp * vavg
   vv2
+
+
+  uu <- BTYDplus:::xbgcnbd_pmf_cpp(params,450.6,10, TRUE)
 
   ## ------------------------------------------------------------------------
   expect_true(TRUE)
@@ -405,6 +410,31 @@ qnbinom_test <- function() {
 
 
 }
+
+
+gamma_test <- function() {
+
+  jcm.Gamma <- .jnew("org.apache.commons.math3.special.Gamma")
+
+  gamma <- function(x) {return (as.vector(lapply(x, jcm.Gamma$gamma)))}
+  lgamma <- function(x) {return (as.vector(lapply(x, jcm.Gamma$logGamma)))}
+
+  x <- c(0:1000) / 100.0
+
+
+  y <- lgamma(x)
+
+  df <-  data.frame(x,y)
+
+  ggplot(data=df, aes(x=x, y=y, group=1)) +
+    geom_line()+
+    geom_point()
+
+
+
+}
+
+
 
 
 
