@@ -48,6 +48,20 @@ library(gsl)
 ```
 
 
+Apache Commons Math
+-------------------
+
+R Wrapper
+
+```{r}
+library("rJava")
+library("commonsMath")
+
+```
+
+
+
+
 
 CRAN
 ----
@@ -228,42 +242,76 @@ clv_test_1()
 ```
 
 
-Case:2 - (k > 1)
-----------------
+Log Gamma Test (GSL/JCM)
+------------------------
 
-utilizza "bias" correction se verificata la condizione: 
-`k > 1 && length(x) == length(t.x) && length(x) == length(T.cal) && length(x) >= 100`
+valutazione "logGamma" con librerie GSL e commons-math
 
 
 ```{r}
-clv_test_2 <- function() {
+lgamma_test <- function() {
+  
+  res <- c()
+  res$dm <- c()
   
 
-  k <- 4
-  r <- 0.41916730555555555
-  alpha <- 17.36728484
-  a <- 0.840583193
-  b <- 1.35516062
-  
-  x <- 0
-  t.x <- 0.0
-  T.cal <- 90.42857142857143
-  T.star <- 104.28571428571429
+  jcm.Gamma <- .jnew("org.apache.commons.math3.special.Gamma")
 
-  pChurn <- 0.43919027543679623
+  lgamma <- function(x) {return (sapply(x, jcm.Gamma$logGamma))}
 
-  vavg <- 980.489769848816
+  x <- c(1:100) / 10.0
+
+  y1 <- lgamma(x)
+  y2 <- gsl::lngamma(x)
+
+  off = 0.3
+
+  df <-  data.frame(x,y1, y2)
   
+  res$df <- df
   
-  params <- clv_params(k,r,alpha,a,b)
-  
-  res <- clv_calc(params, x,t.x,T.cal,T.star, pChurn, vavg)
-  
-  cat("test2: (k > 1) => \n")
-  res
+  return (res)
+
+  ggplot(data=df, aes(x=x)) +
+    scale_color_manual(labels = c("jcm", "gsl"), values = c("red", "blue")) +
+    geom_line(aes(y=y1, color="red"))+
+    geom_point(aes(y=y1, color="red")) +
+    geom_line(aes(y=y2+off, color="blue"))+
+    geom_point(aes(y=y2+off, color="blue"))
+
+
+  ggplot(data=df, aes(x=x)) +
+    geom_line(aes(y=y1-y2, color="green"))+
+    geom_point(aes(y=y1-y2, color="green"))
+
 
 }
-clv_test_2()
+res.lg <<- lgamma_test()
 ```
 
+```{r}
+
+  df <-  res.lg$df
+
+  ggplot(data=df, aes(x=x)) +
+    scale_color_manual(labels = c("jcm", "gsl"), values = c("red", "blue")) +
+    geom_line(aes(y=y1, color="red"))+
+    geom_point(aes(y=y1, color="red")) +
+    geom_line(aes(y=y2+off, color="blue"))+
+    geom_point(aes(y=y2+off, color="blue"))
+
+
+
+```
+
+```{r}
+
+  df <-  res.lg$df
+
+  ggplot(data=df, aes(x=x)) +
+    geom_line(aes(y=y1-y2, color="green"))+
+    geom_point(aes(y=y1-y2, color="green"))
+
+
+```
 
