@@ -46,6 +46,7 @@ conda install $Y -c r r-rcurl
 conda install $Y -c r r-RJSONIO
 conda install $Y -c r r-jpeg
 conda install $Y -c r r-png
+conda install $Y -c r r-rmysql
 
 # conda install --channel https://conda.anaconda.org/bioconda bioconductor-edger
 
