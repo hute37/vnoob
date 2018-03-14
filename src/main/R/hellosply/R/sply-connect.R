@@ -30,11 +30,12 @@ open_connection_local <- function(){
 #' @export
 open_connection_cluster <- function(){
 
+  spark_home <- Sys.getenv("SPARK_HOME")
+
   # Sys.setenv(SPARK_HOME = "/usr/hdp/current/spark2-client/")
   # Sys.setenv(HADOOP_CONF_DIR = '/etc/hadoop/conf.cloudera.hdfs')
   # Sys.setenv(YARN_CONF_DIR = '/etc/hadoop/conf.cloudera.yarn')
 
-  Sys.getenv("SPARK_HOME")
   spark_default_vers <- '2.1.1.2.6.1.0'
 
   config <- spark_config()

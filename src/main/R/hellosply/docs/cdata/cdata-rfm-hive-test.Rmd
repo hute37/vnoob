@@ -1,0 +1,138 @@
+---
+title: "CDATA: RFM Hive Test"
+output:
+  pdf_document: default
+  html_notebook: default
+  html_document:
+    df_print: paged
+---
+
+RFM Loader
+==========
+
+Setup
+-----
+
+### Imports
+
+```{r}
+library(tidyverse)
+library(dplyr)
+library(sparklyr)
+library(ggplot2)
+library(DBI)
+
+library(hellosply)
+
+```
+
+### Config
+
+```{r}
+
+p_mode='staging'
+p_count=1000
+
+```
+
+
+
+
+```{r}
+cdata_config <- function(mode=p_mode, kpi_name='RFM', count=p_count){
+
+  cnf <- new.env()
+
+  cnf$mode <- mode
+  cnf$kpi_name <- kpi_name
+  cnf$count <- count
+
+  cnf$coord <- c()
+  cnf$coord$ws <- 'fordemo1-e29b-41d4-a716-446655440000'
+  cnf$coord$nd <- 'fordemo1-node-41d4-a716-446655440000'
+
+  cnf$hv <- c()
+  cnf$hv$schema <- paste0('tst_n_', gsub('-','_', cnf$coord$nd))
+  cnf$hv$tn_values <- 'alg_rfm_values'
+  cnf$hv$tn_ctrl   <- 'alg_rfm_ctrl'
+
+  cnf$hv$t_values <- paste(cnf$hv$schema, cnf$hv$tn_values, sep='.')
+  cnf$hv$t_ctrl   <- paste(cnf$hv$schema, cnf$hv$tn_ctrl, sep='.')
+
+  return (cnf)
+}
+
+cnf <<- cdata_config()
+
+```
+
+### Spark Connect
+
+```{r}
+
+sc <<- hellosply::open_connection()
+spark_version(sc)
+
+```
+
+
+
+
+Hive Read
+=========
+
+### Hive Read (SQL)
+
+```{r}
+
+cdata_hv_select <- function(sc, cnf, count=cnf$count){
+
+ sql <- sprintf("select * from %s limit %i ",cnf$hv$t_values, count)
+ 
+ df <- dbGetQuery(sc, sql)
+
+  return (df)
+}
+
+ht_values <<- cdata_hv_select(sc,cnf,count=cnf$count)
+
+```
+
+
+### Hive Tidy (json)
+
+```{r}
+
+cdata_hv_tidy <- function(df){
+
+ #ddf <- df %>% na.omit() %>% unnest()
+
+ddf <- df %>% bind_rows(df) %>%    # make larger sample data
+    mutate_if(is.list, simplify_all) %>%    # flatten each list element internally 
+    unnest()    # expand 
+ 
+  return (ddf)
+}
+
+rfm <<- cdata_hv_tidy(ht_values)
+
+str(rfm)
+
+
+```
+
+
+
+### Summary
+
+```{r}
+
+summary(rfm)
+
+
+```
+
+
+
+
+
