@@ -3,18 +3,28 @@ context("sample: http://spark.rstudio.com/")
 library(sparklyr)
 library(dplyr)
 
+library(hellosply)
+
 
 setup({
-  sc <<- spark_connect(master = "local")
+  LOCAL_MODE <<- hellosply::is_local_site()
+
+  if (LOCAL_MODE) {
+    sc <<- hellosply::open_connection_local()
+  }
 })
 
 teardown({
-  spark_disconnect(sc)
+  if (LOCAL_MODE) {
+    hellosply::close_connection(sc)
+  }
 })
 
 
 
 test_that("SQL access", {
+
+  skip_if_not(LOCAL_MODE, "no local spark detected.")
 
   # install.packages(c("nycflights13"))
 
@@ -36,6 +46,8 @@ test_that("SQL access", {
 
 test_that("can use dplyr tranfornations on 'nycflights13::flights' dataset", {
 
+  skip_if_not(LOCAL_MODE, "no local spark detected.")
+
   # install.packages(c("nycflights13"))
 
 
@@ -49,7 +61,7 @@ test_that("can use dplyr tranfornations on 'nycflights13::flights' dataset", {
 
   delay <- flights_tbl %>%
     group_by(tailnum) %>%
-    summarise(count = n(), dist = mean(distance), delay = mean(arr_delay)) %>%
+    summarise(count = n(), dist = mean(distance, na.rm=TRUE), delay = mean(arr_delay, na.rm=TRUE)) %>%
     filter(count > 20, dist < 2000, !is.na(delay)) %>%
     collect
 
@@ -68,6 +80,8 @@ test_that("can use dplyr tranfornations on 'nycflights13::flights' dataset", {
 
 test_that("can use dplyr window functions over 'Lahman::Batting' dataset", {
 
+  skip_if_not(LOCAL_MODE, "no local spark detected.")
+
   # install.packages(c("Lahman"))
 
   batting_tbl <- copy_to(sc, Lahman::Batting, "batting")
@@ -85,6 +99,8 @@ test_that("can use dplyr window functions over 'Lahman::Batting' dataset", {
 
 
 test_that("sply exported function", {
+
+  skip_if_not(LOCAL_MODE, "no local spark detected.")
 
   result <- hellosply::iris_count(sc)
 

@@ -3,41 +3,28 @@ context("sample: http://spark.rstudio.com/")
 library(sparklyr)
 library(dplyr)
 
+library(hellosply)
 
 
 setup({
+  CLUSTER_MODE <<- hellosply::is_cluster_site()
 
-
-  use_spark_yarn <- FALSE
-
-  if (use_spark_yarn) {
-
-    # Sys.setenv(SPARK_HOME = "/usr/hdp/current/spark2-client/")
-    # Sys.setenv(HADOOP_CONF_DIR = '/etc/hadoop/conf.cloudera.hdfs')
-    # Sys.setenv(YARN_CONF_DIR = '/etc/hadoop/conf.cloudera.yarn')
-
-    Sys.getenv("SPARK_HOME")
-    spark_default_vers <- '2.0.0.2.5.0.0'
-
-    config <- spark_config()
-    config$spark.executor.instances <- 2
-    config$spark.executor.cores <- 2
-    config$spark.executor.memory <- "1G"
-
-    sc <<- spark_connect(master="yarn-client", config=config, version = '2.0.0.2.5.0.0')
-  } else {
-    sc <<- spark_connect(master = "local")
+  if (CLUSTER_MODE) {
+    sc <<- hellosply::open_connection()
   }
-
 })
 
 teardown({
-  spark_disconnect(sc)
+  if (CLUSTER_MODE) {
+    hellosply::close_connection(sc)
+  }
 })
 
 
 
 test_that("SQL access", {
+
+  skip_if_not(CLUSTER_MODE, "no cluster detected.")
 
   # install.packages(c("nycflights13"))
 
@@ -57,6 +44,9 @@ test_that("SQL access", {
 
 test_that("can use dplyr tranfornations on 'nycflights13::flights' dataset", {
 
+  skip_if_not(CLUSTER_MODE, "no cluster detected.")
+
+
   # install.packages(c("nycflights13"))
 
 
@@ -70,7 +60,7 @@ test_that("can use dplyr tranfornations on 'nycflights13::flights' dataset", {
 
   delay <- flights_tbl %>%
     group_by(tailnum) %>%
-    summarise(count = n(), dist = mean(distance), delay = mean(arr_delay)) %>%
+    summarise(count = n(), dist = mean(distance, na.rm=TRUE), delay = mean(arr_delay, na.rm=TRUE)) %>%
     filter(count > 20, dist < 2000, !is.na(delay)) %>%
     collect
 
@@ -88,6 +78,8 @@ test_that("can use dplyr tranfornations on 'nycflights13::flights' dataset", {
 
 
 test_that("can use dplyr window functions over 'Lahman::Batting' dataset", {
+
+  skip_if_not(CLUSTER_MODE, "no cluster detected.")
 
   # install.packages(c("Lahman"))
 
@@ -109,7 +101,8 @@ test_that("can use dplyr window functions over 'Lahman::Batting' dataset", {
 
 test_that("spark_apply works in distributed mode", {
 
-  return
+  skip_if_not(CLUSTER_MODE, "no cluster detected.")
+
 
   riris_tbl <- spark_apply(iris_tbl, function(data) {
     data[1:4] + rgamma(1,2)
