@@ -33,7 +33,8 @@ conda search rstudio
 
 conda install -c r rstudio=1.1.383
 
-
+# rstudio qt patch: https://tinyurl.com/y8wr3rxm
+conda update -c rdonnellyr qt
 
 ```
 
